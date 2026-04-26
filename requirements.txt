@@ -1,0 +1,4 @@
+# Third-party packages imported by craft.py, corelap.py, and aldep.py
+numpy>=1.23.0
+matplotlib>=3.7.0
+seaborn>=0.12.0

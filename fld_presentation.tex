@@ -1,0 +1,369 @@
+% Facility Layout and Design -- ALDEP, CORELAP, CRAFT
+% Compile from project folder: pdflatex fld_presentation.tex
+
+\documentclass[aspectratio=169,10pt]{beamer}
+
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{amsmath}
+\usepackage{ragged2e}
+
+\graphicspath{{./plots/}}
+
+\usetheme{Madrid}
+\usecolortheme{default}
+
+% Reduce overflow: slightly narrower effective line width for body text
+\setbeamersize{text margin left=0.75cm, text margin right=0.75cm}
+
+% Tighter default list spacing; ragged right helps hyphenation in columns
+\setlength{\leftmargini}{1.1em}
+\setlength{\labelsep}{0.35em}
+
+\title[FLD Project]{Facility Layout Methods}
+\subtitle{ALDEP, CORELAP, and CRAFT on a shared five-department scenario}
+\author{Facility Layout and Design}
+\date{\today}
+
+\begin{document}
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+\begin{frame}{Outline}
+  \tableofcontents
+\end{frame}
+
+\section{Problem and inputs}
+
+\begin{frame}[t]{Scenario and objectives}
+  \RaggedRight
+  \small
+  \begin{itemize}
+    \setlength{\itemsep}{0.35em}
+    \item \textbf{Setting:} Five-department cell. Same REL and flow data for every method.
+    \item \textbf{Goal:} Two construction layouts (ALDEP, CORELAP), each refined with CRAFT under one transport cost.
+    \item \textbf{Cost:} Rectilinear distance between centroids, weighted by flow $F_{ij}$.
+    \item \textbf{Output:} Layouts, progress curves, CRAFT cost vs.\ iteration, consistent colors by department.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[t]{Departments and areas}
+  \centering
+  \small
+  \begin{tabular}{@{}clc@{}}
+    \toprule
+    ID & Department & Cells \\
+    \midrule
+    0 & Machining  & 3 \\
+    1 & Assembly   & 2 \\
+    2 & Tooling    & 1 \\
+    3 & Testing    & 2 \\
+    4 & Shipping   & 1 \\
+    \bottomrule
+  \end{tabular}
+
+  \vspace{0.55em}
+  \RaggedRight
+  \small
+  \begin{itemize}
+    \setlength{\itemsep}{0.35em}
+    \item One \textbf{REL chart} (A, E, I, O, U, X) drives both construction methods.
+    \item ALDEP: compact sweep grid. CORELAP: larger grid, multi-cell departments.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[t]{Flow matrix and transport cost}
+  \centering
+  \resizebox{0.88\linewidth}{!}{$
+  F =
+  \begin{bmatrix}
+    0 & 12 & 4 & 9 & 2 \\
+    3 & 0 & 1 & 14 & 11 \\
+    5 & 2 & 0 & 3 & 0 \\
+    4 & 6 & 0 & 0 & 8 \\
+    2 & 3 & 0 & 2 & 0
+  \end{bmatrix}
+  $}
+
+  \vspace{0.45em}
+  \RaggedRight
+  \small
+  \begin{itemize}
+    \setlength{\itemsep}{0.35em}
+    \item $F_{ij}$: intensity from $i$ to $j$.
+    \item $C = \sum_{i\neq j} F_{ij}\, d(\mathbf{c}_i,\mathbf{c}_j)$ with rectilinear $d$.
+  \end{itemize}
+\end{frame}
+
+\section{Overall pipeline}
+
+\begin{frame}[t]{Pipeline --- construction and centroids (steps 1--3)}
+  \RaggedRight
+  \footnotesize
+  \textbf{Input:} Departments, areas, REL chart, flow $F$, feasible CRAFT pairs (here: all pairs).
+
+  \vspace{0.45em}
+  \begin{enumerate}
+    \setlength{\itemsep}{0.4em}
+    \item \textbf{ALDEP:} REL-based sequence; sweep placement $\rightarrow$ layout $L_A$.
+    \item \textbf{CORELAP:} TCR order; PR-driven growth from center $\rightarrow$ layout $L_B$.
+    \item \textbf{Centroids:} For each $L$, centroid $\mathbf{c}_i$ = mean of that department's cell centers (same coords as~$d$).
+  \end{enumerate}
+\end{frame}
+
+\begin{frame}[t]{Pipeline --- CRAFT, visualization, output (steps 4--6)}
+  \RaggedRight
+  \footnotesize
+  \begin{enumerate}
+    \setcounter{enumi}{3}
+    \setlength{\itemsep}{0.4em}
+    \item \textbf{CRAFT (twice):} From centroids of $L_A$ and $L_B$: evaluate all feasible swaps; accept best decrease in~$C$; stop when no improvement (or cycle).
+    \item \textbf{Floor replay (drawings only):} Replay accepted swap \emph{order} on a grid copy. Equal areas: swap cells. Unequal: give smaller dept.\ $k$ cells taken from the far side of the larger region; rest to larger.
+    \item \textbf{Output:} Refined costs, iteration curves, layouts, geometric centroids on replayed grids.
+  \end{enumerate}
+\end{frame}
+
+\section{ALDEP}
+
+\begin{frame}[t]{ALDEP --- idea}
+  \RaggedRight
+  \small
+  \begin{itemize}
+    \setlength{\itemsep}{0.35em}
+    \item \textbf{Sequence:} Random start; extend using REL vs.\ policy level (e.g.\ I).
+    \item \textbf{Placement:} Serpentine column sweep; prescribed cell count each dept.
+    \item \textbf{Score:} REL-weighted adjacency on grid $\neq$ transport~$C$.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[t]{ALDEP --- resulting layout}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{0.5\textwidth}
+      \includegraphics[width=\linewidth,height=0.62\textheight,keepaspectratio]{01_aldep_initial_layout.png}
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \RaggedRight
+      \footnotesize
+      Fixed colors by dept.\ ID. Labels: name and cell count.
+
+      \medskip
+      \textbf{Takeaway:} Adjacency follows sweep + REL sequence, not direct $C$ minimization.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}[t]{ALDEP --- construction progress}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{0.52\textwidth}
+      \includegraphics[width=\linewidth,height=0.62\textheight,keepaspectratio]{05_aldep_rel_score_vs_steps.png}
+    \end{column}
+    \begin{column}{0.46\textwidth}
+      \RaggedRight
+      \footnotesize
+      \textbf{Blue:} REL adjacency after each dept.\ is placed (can drop if X-type pairs appear).
+
+      \medskip
+      \textbf{Orange:} Partial $C$ on placed depts.
+
+      \medskip
+      \textbf{Conclusion:} Different metrics; curves need not move together.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\section{CORELAP}
+
+\begin{frame}[t]{CORELAP --- idea}
+  \RaggedRight
+  \small
+  \begin{itemize}
+    \setlength{\itemsep}{0.35em}
+    \item \textbf{Phase 1:} TCR from REL; placement order (ties: TCR, then area).
+    \item \textbf{Phase 2:} Center seed; expand; each cell maximizes PR (exponential REL weights).
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[t]{CORELAP --- resulting layout}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{0.5\textwidth}
+      \includegraphics[width=\linewidth,height=0.62\textheight,keepaspectratio]{02_corelap_initial_layout.png}
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \RaggedRight
+      \footnotesize
+      Same colors as ALDEP. Empty cells as background.
+
+      \medskip
+      \textbf{Takeaway:} PR growth pulls strong REL ties toward the frontier.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}[t]{CORELAP --- transport while building}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{0.52\textwidth}
+      \includegraphics[width=\linewidth,height=0.62\textheight,keepaspectratio]{06_corelap_transport_vs_steps.png}
+    \end{column}
+    \begin{column}{0.46\textwidth}
+      \RaggedRight
+      \footnotesize
+      Partial $C$ after each full department.
+
+      \medskip
+      \textbf{Conclusion:} Stepwise non-monotone; final grid seeds CRAFT.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\section{CRAFT}
+
+\begin{frame}[t]{CRAFT --- idea (abstract model)}
+  \RaggedRight
+  \small
+  \begin{itemize}
+    \setlength{\itemsep}{0.35em}
+    \item Each dept.: centroid of its cells.
+    \item \textbf{Move:} Swap centroid coordinate pair of two depts.\ (all pairs here).
+    \item \textbf{Greedy:} Best improving swap on $C$; repeat; stop if none (or cycle guard).
+    \item Centroid model does not redraw unequal footprints by itself.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[t]{CRAFT --- cost vs.\ iteration (ALDEP seed)}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{0.52\textwidth}
+      \includegraphics[width=\linewidth,height=0.62\textheight,keepaspectratio]{07_craft_cost_vs_iteration_aldep_seed.png}
+    \end{column}
+    \begin{column}{0.46\textwidth}
+      \RaggedRight
+      \footnotesize
+      One step $\approx$ one accepted greedy improvement on~$C$.
+
+      \medskip
+      \textbf{Conclusion:} $C$ non-increasing; flats = no gain that iteration.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}[t]{CRAFT --- cost vs.\ iteration (CORELAP seed)}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{0.52\textwidth}
+      \includegraphics[width=\linewidth,height=0.62\textheight,keepaspectratio]{08_craft_cost_vs_iteration_corelap_seed.png}
+    \end{column}
+    \begin{column}{0.46\textwidth}
+      \RaggedRight
+      \footnotesize
+      Same reading; different start map.
+
+      \medskip
+      \textbf{Conclusion:} Different path; both reach a local optimum of abstract CRAFT.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}[t]{CRAFT --- comparing seeds and final costs}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{0.49\textwidth}
+      \includegraphics[width=\linewidth,height=0.52\textheight,keepaspectratio]{09_craft_cost_both_seeds.png}
+      \par\centering\tiny Both trajectories
+    \end{column}
+    \begin{column}{0.49\textwidth}
+      \includegraphics[width=\linewidth,height=0.52\textheight,keepaspectratio]{10_final_cost_comparison.png}
+      \par\centering\tiny Final $C$
+    \end{column}
+  \end{columns}
+
+  \vspace{0.35em}
+  \RaggedRight
+  \footnotesize
+  \textbf{Conclusion:} Lines compare paths; bars compare final abstract $C$.
+\end{frame}
+
+\begin{frame}[t]{Interpreting post-CRAFT floor drawings (1/2)}
+  \RaggedRight
+  \footnotesize
+  \textbf{Goal:} Show cell changes while keeping areas consistent when partners differ in size.
+  \begin{itemize}
+    \setlength{\itemsep}{0.35em}
+    \item \textbf{Equal area:} Full cell exchange.
+    \item \textbf{Unequal:} Smaller has $k$ cells. Give it $k$ cells of the larger region farthest from the smaller (Manhattan). Remaining union cells $\rightarrow$ larger.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[t]{Interpreting post-CRAFT floor drawings (2/2)}
+  \RaggedRight
+  \footnotesize
+  \begin{itemize}
+    \setlength{\itemsep}{0.35em}
+    \item Replay swaps in same \emph{order} as CRAFT accepted pairs.
+    \item Markers: geometric centroids after replay (plot coords).
+    \item Abstract $C$ (curves/bars) stays the centroid model. Re-$C$ on replayed grid may differ---drawings are a companion view.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[t]{Post-CRAFT layout (ALDEP seed)}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{0.5\textwidth}
+      \includegraphics[width=\linewidth,height=0.62\textheight,keepaspectratio]{03_craft_final_from_aldep.png}
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \RaggedRight
+      \footnotesize
+      vs.\ ALDEP construction: same colors; cells change only where replay reallocates swapped unions.
+
+      \medskip
+      \textbf{Conclusion:} Illustrates one geometric convention for pairwise refinement.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}[t]{Post-CRAFT layout (CORELAP seed)}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{0.5\textwidth}
+      \includegraphics[width=\linewidth,height=0.62\textheight,keepaspectratio]{04_craft_final_from_corelap.png}
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \RaggedRight
+      \footnotesize
+      vs.\ CORELAP construction slide.
+
+      \medskip
+      \textbf{Conclusion:} Different seed $\Rightarrow$ different replayed footprint.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}[c]{Overview: four layouts}
+  \centering
+  \includegraphics[width=\linewidth,height=0.78\textheight,keepaspectratio]{11_overview_four_panels.png}
+
+  \vspace{0.25em}
+  \RaggedRight
+  \footnotesize
+  Top: ALDEP and CORELAP constructions. Bottom: post-CRAFT replay from each seed.
+\end{frame}
+
+\section{Conclusions}
+
+\begin{frame}[t]{Summary}
+  \RaggedRight
+  \small
+  \begin{itemize}
+    \setlength{\itemsep}{0.35em}
+    \item Shared $F$ and REL enable fair comparison of ALDEP vs.\ CORELAP.
+    \item They optimize different surrogates; pre-CRAFT $C$ ranking need not match post-CRAFT.
+    \item CRAFT: monotone abstract $C$ from each seed; iteration plots show convergence speed.
+    \item Floor drawings use explicit replay rules; read them with---not instead of---abstract $C$ curves.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \centering
+  \Large Thank you for your attention.
+\end{frame}
+
+\end{document}
