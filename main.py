@@ -31,6 +31,46 @@ def _ensure_plot_dir() -> None:
     os.makedirs(PLOT_DIR, exist_ok=True)
 
 
+def print_results_table(rows: List[Tuple[str, str, float, float, float]]) -> None:
+    """Print the main numerical results in a terminal-friendly table."""
+    headers = [
+        "Seed",
+        "Construction order",
+        "Initial C",
+        "CRAFT final C",
+        "Visual replay C",
+        "Improvement",
+    ]
+    table_rows = []
+    for seed, order, initial_cost, final_cost, visual_cost in rows:
+        improvement = initial_cost - final_cost
+        table_rows.append(
+            [
+                seed,
+                order,
+                f"{initial_cost:.2f}",
+                f"{final_cost:.2f}",
+                f"{visual_cost:.2f}",
+                f"{improvement:.2f}",
+            ]
+        )
+
+    widths = [
+        max(len(headers[i]), *(len(row[i]) for row in table_rows))
+        for i in range(len(headers))
+    ]
+
+    def fmt_row(values: List[str]) -> str:
+        return " | ".join(value.ljust(widths[i]) for i, value in enumerate(values))
+
+    separator = "-+-".join("-" * width for width in widths)
+    print("=== Summary results table ===")
+    print(fmt_row(headers))
+    print(separator)
+    for row in table_rows:
+        print(fmt_row(row))
+
+
 # --- Unified layout figure style (all construction + CRAFT grid plots) ---
 LAYOUT_FIGSIZE = (7.0, 6.5)
 CELL_EDGE_COLOR = "#1a1a1a"
@@ -670,6 +710,26 @@ def main() -> None:
         f"{cost_vis_core:.2f}",
     )
     print("(Abstract CRAFT costs above may differ; plots use the repartition rule.)")
+    print()
+
+    print_results_table(
+        [
+            (
+                "ALDEP",
+                " -> ".join(seq_aldep),
+                cost_aldep_init,
+                cost_final_aldep,
+                cost_vis_aldep,
+            ),
+            (
+                "CORELAP",
+                " -> ".join(cr.dept_names[d] for d in placement_order),
+                cost_core_init,
+                cost_final_core,
+                cost_vis_core,
+            ),
+        ]
+    )
     print()
 
     # --- Save plots (unified rectangle + grid style) ---
