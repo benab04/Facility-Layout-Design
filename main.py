@@ -768,8 +768,6 @@ def main() -> None:
         "ALDEP REL adjacency score",
         "ALDEP: REL score vs construction progress",
         "05_aldep_rel_score_vs_steps.png",
-        y2=transp_aldep_curve,
-        y2label="Partial transport cost",
     )
     steps_core = list(range(1, len(transp_core_curve) + 1))
     plot_cost_series(
